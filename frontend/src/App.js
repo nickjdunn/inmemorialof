@@ -5,6 +5,8 @@ import Homepage from './pages/Homepage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import CreateMemorial from './pages/CreateMemorial';
+import MemorialView from './pages/MemorialView';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -58,12 +60,23 @@ function AppRoutes() {
         }
       />
 
+      {/* Memorial View - Public */}
+      <Route path="/memorial/:url" element={<MemorialView />} />
+
       {/* Protected Routes */}
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/create-memorial"
+        element={
+          <ProtectedRoute>
+            <CreateMemorial />
           </ProtectedRoute>
         }
       />
