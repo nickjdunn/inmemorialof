@@ -124,16 +124,58 @@ const MemorialView = () => {
           </div>
         </div>
 
-        {/* Placeholder for future sections */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
-            <p>Photo Gallery</p>
-            <p className="text-sm mt-2">Coming soon in Phase 3</p>
+        {/* Photo Gallery */}
+        {memorial.gallery?.photos?.length > 0 && memorial.gallery.showGallery && (
+          <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Photo Gallery</h2>
+            
+            {memorial.gallery.displayStyle === 'grid' ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {memorial.gallery.photos.map((photo, index) => (
+                  <div key={index} className="group cursor-pointer">
+                    <img
+                      src={photo.url}
+                      alt={photo.caption || `Gallery photo ${index + 1}`}
+                      className="w-full h-48 object-cover rounded-lg shadow hover:shadow-xl transition"
+                      onClick={() => {
+                        window.open(photo.url, '_blank');
+                      }}
+                    />
+                    {photo.caption && (
+                      <p className="text-sm text-gray-600 mt-2 text-center">
+                        {photo.caption}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <div className="flex space-x-4 pb-4">
+                  {memorial.gallery.photos.map((photo, index) => (
+                    <div key={index} className="flex-shrink-0 w-80">
+                      <img
+                        src={photo.url}
+                        alt={photo.caption || `Gallery photo ${index + 1}`}
+                        className="w-full h-64 object-cover rounded-lg shadow-lg"
+                      />
+                      {photo.caption && (
+                        <p className="text-sm text-gray-600 mt-2 text-center">
+                          {photo.caption}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
-            <p>Tributes & Messages</p>
-            <p className="text-sm mt-2">Coming soon in Phase 3</p>
-          </div>
+        )}
+
+        {/* Tributes Placeholder */}
+        <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+          <p>Tributes & Messages</p>
+          <p className="text-sm mt-2">Coming soon in Phase 4</p>
         </div>
       </main>
 

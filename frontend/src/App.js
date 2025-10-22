@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import CreateMemorial from './pages/CreateMemorial';
+import EditMemorial from './pages/EditMemorial';
 import MemorialView from './pages/MemorialView';
 
 // Protected Route component
@@ -77,6 +78,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <CreateMemorial />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/edit-memorial/:id"
+        element={
+          <ProtectedRoute>
+            <EditMemorial />
           </ProtectedRoute>
         }
       />
