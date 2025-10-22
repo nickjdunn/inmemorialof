@@ -172,6 +172,76 @@ const MemorialView = () => {
           </div>
         )}
 
+        {/* Timeline Section */}
+        {memorial.timeline?.events?.length > 0 && memorial.timeline.showTimeline && (
+          <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Life Timeline</h2>
+            
+            <div className="relative">
+              {/* Timeline line */}
+              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-blue-200"></div>
+              
+              <div className="space-y-6">
+                {memorial.timeline.events
+                  .sort((a, b) => new Date(a.date) - new Date(b.date))
+                  .map((event, index) => (
+                    <div key={index} className="relative pl-12">
+                      {/* Timeline dot */}
+                      <div className="absolute left-2.5 top-2 w-3 h-3 bg-blue-600 rounded-full border-2 border-white shadow"></div>
+                      
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Calendar className="w-4 h-4 text-blue-600" />
+                          <span className="text-sm font-semibold text-gray-700">
+                            {event.yearOnly 
+                              ? new Date(event.date).getFullYear() 
+                              : new Date(event.date).toLocaleDateString('en-US', { 
+                                  year: 'numeric', 
+                                  month: 'long', 
+                                  day: 'numeric' 
+                                })}
+                          </span>
+                        </div>
+                        <h3 className="font-semibold text-gray-900 mb-1">{event.title}</h3>
+                        {event.description && (
+                          <p className="text-gray-600 text-sm">{event.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Family Section */}
+        {memorial.familyMembers?.length > 0 && memorial.showFamily && (
+          <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Family & Loved Ones</h2>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+              {memorial.familyMembers.map((member, index) => (
+                <div key={index} className="border rounded-lg p-4 hover:shadow-md transition">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-semibold text-lg">
+                        {member.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900">{member.name}</h3>
+                      <p className="text-sm text-blue-600">{member.relationship}</p>
+                      {member.description && (
+                        <p className="text-sm text-gray-600 mt-1">{member.description}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Tributes Placeholder */}
         <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
           <p>Tributes & Messages</p>

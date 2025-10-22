@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { ArrowLeft, Upload, Calendar, Trash2 } from 'lucide-react';
 import GalleryManager from '../components/GalleryManager';
+import TimelineManager from '../components/TimelineManager';
+import FamilyManager from '../components/FamilyManager';
 
 const EditMemorial = () => {
   const { id } = useParams();
@@ -32,6 +34,16 @@ const EditMemorial = () => {
     showGallery: true
   });
 
+  const [timeline, setTimeline] = useState({
+    events: [],
+    showTimeline: true
+  });
+
+  const [family, setFamily] = useState({
+    familyMembers: [],
+    showFamily: true
+  });
+
   useEffect(() => {
     fetchMemorial();
   }, [id]);
@@ -57,6 +69,15 @@ const EditMemorial = () => {
       if (memorial.gallery) {
         setGallery(memorial.gallery);
       }
+
+      if (memorial.timeline) {
+        setTimeline(memorial.timeline);
+      }
+
+      setFamily({
+        familyMembers: memorial.familyMembers || [],
+        showFamily: memorial.showFamily !== false
+      });
 
       setLoading(false);
     } catch (err) {
@@ -98,7 +119,10 @@ const EditMemorial = () => {
           url: profilePhotoPreview,
           shape: 'circle'
         } : null,
-        gallery: gallery
+        gallery: gallery,
+        timeline: timeline,
+        familyMembers: family.familyMembers,
+        showFamily: family.showFamily
       };
 
       console.log('Sending update data:', updateData);
@@ -294,6 +318,22 @@ const EditMemorial = () => {
             <div className="mb-8 p-6 bg-gray-50 rounded-lg">
               <h3 className="text-xl font-semibold mb-4">Photo Gallery</h3>
               <GalleryManager gallery={gallery} onChange={setGallery} />
+            </div>
+
+            {/* Timeline Section */}
+            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
+              <h3 className="text-xl font-semibold mb-4">Timeline & Life Events</h3>
+              <TimelineManager timeline={timeline} onChange={setTimeline} />
+            </div>
+
+            {/* Family Section */}
+            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
+              <h3 className="text-xl font-semibold mb-4">Family & Relationships</h3>
+              <FamilyManager 
+                familyMembers={family.familyMembers} 
+                showFamily={family.showFamily}
+                onChange={setFamily} 
+              />
             </div>
 
             {/* Privacy Status */}
