@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { ArrowLeft, Calendar, Heart, Share2 } from 'lucide-react';
 import api from '../utils/api';
-import { Calendar, Heart, Share2, ArrowLeft } from 'lucide-react';
+import FavoritesDisplay from '../components/FavoritesDisplay';
 
 const MemorialView = () => {
   const { url } = useParams();
@@ -17,9 +18,9 @@ const MemorialView = () => {
     try {
       const response = await api.get(`/memorials/${url}`);
       setMemorial(response.data.memorial);
+      setLoading(false);
     } catch (err) {
       setError(err.response?.data?.error || 'Memorial not found');
-    } finally {
       setLoading(false);
     }
   };
@@ -32,14 +33,14 @@ const MemorialView = () => {
     );
   }
 
-  if (error) {
+  if (error || !memorial) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Memorial Not Found</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Memorial Not Found</h1>
           <p className="text-gray-600 mb-6">{error}</p>
           <Link to="/" className="text-blue-600 hover:text-blue-700">
-            Return to Homepage
+            Return to Home
           </Link>
         </div>
       </div>
@@ -88,7 +89,8 @@ const MemorialView = () => {
                 <div className="flex items-center justify-center text-gray-600 text-lg">
                   <Calendar className="w-5 h-5 mr-2" />
                   <span>
-                    {birthYear && deathYear ? `${birthYear} - ${deathYear}` : 
+                    {birthYear && deathYear ? 
+                     `${birthYear} - ${deathYear}` : 
                      birthYear ? `Born ${birthYear}` : 
                      deathYear ? `Passed ${deathYear}` : ''}
                   </span>
@@ -213,6 +215,12 @@ const MemorialView = () => {
             </div>
           </div>
         )}
+
+        {/* Favorites Section - NEW! */}
+        <FavoritesDisplay 
+          favorites={memorial.favorites}
+          showFavorites={memorial.showFavorites}
+        />
 
         {/* Family Section */}
         {memorial.familyMembers?.length > 0 && memorial.showFamily && (

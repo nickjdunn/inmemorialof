@@ -6,6 +6,7 @@ import { ArrowLeft, Upload, Calendar, Trash2 } from 'lucide-react';
 import GalleryManager from '../components/GalleryManager';
 import TimelineManager from '../components/TimelineManager';
 import FamilyManager from '../components/FamilyManager';
+import FavoritesManager from '../components/FavoritesManager';
 
 const EditMemorial = () => {
   const { id } = useParams();
@@ -27,6 +28,7 @@ const EditMemorial = () => {
 
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState(null);
+  
   const [gallery, setGallery] = useState({
     photos: [],
     videos: [],
@@ -42,6 +44,11 @@ const EditMemorial = () => {
   const [family, setFamily] = useState({
     familyMembers: [],
     showFamily: true
+  });
+
+  const [favorites, setFavorites] = useState({
+    favorites: [],
+    showFavorites: true
   });
 
   useEffect(() => {
@@ -77,6 +84,11 @@ const EditMemorial = () => {
       setFamily({
         familyMembers: memorial.familyMembers || [],
         showFamily: memorial.showFamily !== false
+      });
+
+      setFavorites({
+        favorites: memorial.favorites || [],
+        showFavorites: memorial.showFavorites !== false
       });
 
       setLoading(false);
@@ -122,7 +134,9 @@ const EditMemorial = () => {
         gallery: gallery,
         timeline: timeline,
         familyMembers: family.familyMembers,
-        showFamily: family.showFamily
+        showFamily: family.showFamily,
+        favorites: favorites.favorites,
+        showFavorites: favorites.showFavorites
       };
 
       console.log('Sending update data:', updateData);
@@ -189,7 +203,7 @@ const EditMemorial = () => {
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-              {typeof error === 'string' ? error : 'An error occurred while updating the memorial'}
+              {typeof error === 'string' ? error : 'An error occurred'}
             </div>
           )}
 
@@ -206,86 +220,70 @@ const EditMemorial = () => {
                 Profile Photo
               </label>
               <div className="flex items-center space-x-4">
-                {profilePhotoPreview ? (
+                {profilePhotoPreview && (
                   <img
                     src={profilePhotoPreview}
-                    alt="Preview"
-                    className="w-24 h-24 rounded-full object-cover"
+                    alt="Profile preview"
+                    className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
                   />
-                ) : (
-                  <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
-                    <Upload className="w-8 h-8 text-gray-400" />
-                  </div>
                 )}
-                <div>
+                <label className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
+                  <Upload className="w-4 h-4 mr-2" />
+                  {profilePhotoPreview ? 'Change Photo' : 'Upload Photo'}
                   <input
                     type="file"
-                    id="profilePhoto"
-                    accept="image/*"
                     onChange={handlePhotoChange}
+                    accept="image/*"
                     className="hidden"
                   />
-                  <label
-                    htmlFor="profilePhoto"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 cursor-pointer inline-block"
-                  >
-                    Change Photo
-                  </label>
-                </div>
+                </label>
               </div>
             </div>
 
             {/* Full Name */}
             <div className="mb-6">
               <label className="block text-gray-700 font-semibold mb-2">
-                Full Name *
+                Full Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
-            {/* Dates */}
+            {/* Birth & Death Dates */}
             <div className="grid md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label className="block text-gray-700 font-semibold mb-2">
                   Birth Date
                 </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <input
-                    type="date"
-                    name="birthDate"
-                    value={formData.birthDate}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                <input
+                  type="date"
+                  name="birthDate"
+                  value={formData.birthDate}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
-
               <div>
                 <label className="block text-gray-700 font-semibold mb-2">
                   Death Date
                 </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <input
-                    type="date"
-                    name="deathDate"
-                    value={formData.deathDate}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                <input
+                  type="date"
+                  name="deathDate"
+                  value={formData.deathDate}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
             </div>
 
-            {/* Show Dates Toggle */}
+            {/* Show Dates Checkbox */}
             <div className="mb-6">
               <label className="flex items-center">
                 <input
@@ -328,11 +326,21 @@ const EditMemorial = () => {
 
             {/* Family Section */}
             <div className="mb-8 p-6 bg-gray-50 rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">Family & Relationships</h3>
+              <h3 className="text-xl font-semibold mb-4">Family & Loved Ones</h3>
               <FamilyManager 
-                familyMembers={family.familyMembers} 
+                familyMembers={family.familyMembers}
                 showFamily={family.showFamily}
-                onChange={setFamily} 
+                onChange={setFamily}
+              />
+            </div>
+
+            {/* Favorites Section - NEW! */}
+            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
+              <h3 className="text-xl font-semibold mb-4">Favorites & Interests</h3>
+              <FavoritesManager 
+                favorites={favorites.favorites}
+                showFavorites={favorites.showFavorites}
+                onChange={setFavorites}
               />
             </div>
 
@@ -353,8 +361,8 @@ const EditMemorial = () => {
               </select>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex space-x-4 mb-6">
+            {/* Submit Buttons */}
+            <div className="flex space-x-4">
               <button
                 type="submit"
                 disabled={saving}
@@ -370,19 +378,22 @@ const EditMemorial = () => {
                 Cancel
               </button>
             </div>
-
-            {/* Delete Button */}
-            <div className="pt-6 border-t">
-              <button
-                type="button"
-                onClick={handleDelete}
-                className="flex items-center text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete Memorial
-              </button>
-            </div>
           </form>
+
+          {/* Delete Memorial */}
+          <div className="mt-12 pt-8 border-t border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Danger Zone</h3>
+            <p className="text-gray-600 mb-4">
+              Once you delete a memorial, there is no going back. Please be certain.
+            </p>
+            <button
+              onClick={handleDelete}
+              className="flex items-center px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Memorial
+            </button>
+          </div>
         </div>
       </main>
     </div>

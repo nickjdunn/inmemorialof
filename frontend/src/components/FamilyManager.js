@@ -8,6 +8,8 @@ const FamilyManager = ({ familyMembers, showFamily, onChange }) => {
     relationship: '',
     description: ''
   });
+  const [customRelationship, setCustomRelationship] = useState('');
+  const [isCustom, setIsCustom] = useState(false);
 
   const members = familyMembers || [];
 
@@ -28,7 +30,9 @@ const FamilyManager = ({ familyMembers, showFamily, onChange }) => {
   ];
 
   const handleAddMember = () => {
-    if (!newMember.name || !newMember.relationship) {
+    const finalRelationship = isCustom ? customRelationship : newMember.relationship;
+    
+    if (!newMember.name || !finalRelationship) {
       alert('Please fill in name and relationship');
       return;
     }
@@ -37,7 +41,9 @@ const FamilyManager = ({ familyMembers, showFamily, onChange }) => {
       familyMembers: [
         ...members,
         {
-          ...newMember,
+          name: newMember.name,
+          relationship: finalRelationship,
+          description: newMember.description,
           order: members.length
         }
       ],
@@ -45,6 +51,8 @@ const FamilyManager = ({ familyMembers, showFamily, onChange }) => {
     });
 
     setNewMember({ name: '', relationship: '', description: '' });
+    setCustomRelationship('');
+    setIsCustom(false);
     setShowAddForm(false);
   };
 
@@ -55,6 +63,25 @@ const FamilyManager = ({ familyMembers, showFamily, onChange }) => {
 
   const handleToggleFamily = () => {
     onChange({ familyMembers: members, showFamily: !showFamily });
+  };
+
+  const handleRelationshipChange = (value) => {
+    if (value === 'custom') {
+      setIsCustom(true);
+      setNewMember({ ...newMember, relationship: '' });
+      setCustomRelationship('');
+    } else {
+      setIsCustom(false);
+      setNewMember({ ...newMember, relationship: value });
+      setCustomRelationship('');
+    }
+  };
+
+  const handleCancel = () => {
+    setShowAddForm(false);
+    setNewMember({ name: '', relationship: '', description: '' });
+    setCustomRelationship('');
+    setIsCustom(false);
   };
 
   return (
@@ -119,7 +146,7 @@ const FamilyManager = ({ familyMembers, showFamily, onChange }) => {
             {/* Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name *
+                Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -130,34 +157,40 @@ const FamilyManager = ({ familyMembers, showFamily, onChange }) => {
               />
             </div>
 
-            {/* Relationship */}
+            {/* Relationship Dropdown */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Relationship *
+                Relationship <span className="text-red-500">*</span>
               </label>
-              <div className="flex space-x-2">
-                <select
-                  value={newMember.relationship}
-                  onChange={(e) => setNewMember({ ...newMember, relationship: e.target.value })}
-                  className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select relationship</option>
-                  {commonRelationships.map(rel => (
-                    <option key={rel} value={rel}>{rel}</option>
-                  ))}
-                  <option value="custom">Custom...</option>
-                </select>
-              </div>
-              {newMember.relationship === 'custom' && (
+              <select
+                value={isCustom ? 'custom' : newMember.relationship}
+                onChange={(e) => handleRelationshipChange(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select relationship</option>
+                {commonRelationships.map(rel => (
+                  <option key={rel} value={rel}>{rel}</option>
+                ))}
+                <option value="custom">Custom...</option>
+              </select>
+            </div>
+
+            {/* Custom Relationship Input */}
+            {isCustom && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Custom Relationship <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
-                  value={newMember.relationship}
-                  onChange={(e) => setNewMember({ ...newMember, relationship: e.target.value })}
-                  placeholder="Enter custom relationship"
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
+                  value={customRelationship}
+                  onChange={(e) => setCustomRelationship(e.target.value)}
+                  placeholder="Enter custom relationship (e.g., Best Friend, Neighbor)"
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
                 />
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Description */}
             <div>
@@ -167,7 +200,7 @@ const FamilyManager = ({ familyMembers, showFamily, onChange }) => {
               <textarea
                 value={newMember.description}
                 onChange={(e) => setNewMember({ ...newMember, description: e.target.value })}
-                placeholder="Add a brief description..."
+                placeholder="Add a brief description (optional)..."
                 rows="2"
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -184,10 +217,7 @@ const FamilyManager = ({ familyMembers, showFamily, onChange }) => {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setShowAddForm(false);
-                  setNewMember({ name: '', relationship: '', description: '' });
-                }}
+                onClick={handleCancel}
                 className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 Cancel
@@ -197,10 +227,12 @@ const FamilyManager = ({ familyMembers, showFamily, onChange }) => {
         </div>
       )}
 
+      {/* Empty State */}
       {members.length === 0 && !showAddForm && (
         <div className="text-center py-8 text-gray-500">
           <Users className="w-12 h-12 text-gray-400 mx-auto mb-2" />
           <p>No family members added yet</p>
+          <p className="text-sm mt-1">Add family members and loved ones to honor their relationships</p>
         </div>
       )}
     </div>
