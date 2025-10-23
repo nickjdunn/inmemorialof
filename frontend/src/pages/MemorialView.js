@@ -25,6 +25,18 @@ const MemorialView = () => {
     }
   };
 
+  // Helper function to get shape CSS class
+  const getPhotoShapeClass = (shape) => {
+    const shapeMap = {
+      'circle': 'rounded-full',
+      'square': 'rounded-none',
+      'rounded-square': 'rounded-2xl',
+      'heart': 'heart-shape',
+      'oval': 'oval-shape'
+    };
+    return shapeMap[shape] || 'rounded-full';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -49,6 +61,7 @@ const MemorialView = () => {
 
   const birthYear = memorial.birthDate ? new Date(memorial.birthDate).getFullYear() : null;
   const deathYear = memorial.deathDate ? new Date(memorial.deathDate).getFullYear() : null;
+  const photoShape = memorial.profilePhoto?.shape || 'circle'; // Get saved shape
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -69,14 +82,32 @@ const MemorialView = () => {
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 h-48"></div>
           
           <div className="relative px-8 pb-8">
-            {/* Profile Photo */}
+            {/* Profile Photo with Selected Shape */}
             {memorial.profilePhoto?.url && (
-              <div className="relative -mt-20 mb-6">
-                <img
-                  src={memorial.profilePhoto.url}
-                  alt={memorial.fullName}
-                  className="w-40 h-40 rounded-full border-4 border-white shadow-lg object-cover mx-auto"
-                />
+              <div className="relative -mt-20 mb-6 flex justify-center">
+                {photoShape === 'oval' ? (
+                  <div className={`w-40 h-50 border-4 border-white shadow-lg overflow-hidden ${getPhotoShapeClass(photoShape)}`}>
+                    <img
+                      src={memorial.profilePhoto.url}
+                      alt={memorial.fullName}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : photoShape === 'heart' ? (
+                  <div className={`w-40 h-40 border-4 border-white shadow-lg overflow-hidden ${getPhotoShapeClass(photoShape)}`}>
+                    <img
+                      src={memorial.profilePhoto.url}
+                      alt={memorial.fullName}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <img
+                    src={memorial.profilePhoto.url}
+                    alt={memorial.fullName}
+                    className={`w-40 h-40 border-4 border-white shadow-lg object-cover memorial-profile-photo ${getPhotoShapeClass(photoShape)}`}
+                  />
+                )}
               </div>
             )}
 
@@ -216,7 +247,7 @@ const MemorialView = () => {
           </div>
         )}
 
-        {/* Favorites Section - NEW! */}
+        {/* Favorites Section */}
         <FavoritesDisplay 
           favorites={memorial.favorites}
           showFavorites={memorial.showFavorites}

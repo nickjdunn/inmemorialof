@@ -1,0 +1,245 @@
+/* ============================================
+   PHOTO SHAPES CSS - WORKING VERSION
+   ============================================ */
+
+/* Standard Tailwind shapes (already working) */
+/* .rounded-full = circle */
+/* .rounded-none = square */
+/* .rounded-2xl = rounded square */
+
+/* ============================================
+   HEART SHAPE - Using clip-path (WORKING VERSION)
+   ============================================ */
+
+/* Heart shape using clip-path */
+.heart-shape {
+  clip-path: path('M12 4.248c-3.148-5.402-12-3.825-12 2.944 0 4.661 5.571 9.427 12 15.808 6.43-6.381 12-11.147 12-15.808 0-6.792-8.875-8.306-12-2.944z');
+  /* Fallback for better browser support */
+  -webkit-clip-path: path('M12 4.248c-3.148-5.402-12-3.825-12 2.944 0 4.661 5.571 9.427 12 15.808 6.43-6.381 12-11.147 12-15.808 0-6.792-8.875-8.306-12-2.944z');
+}
+
+/* Safari/Webkit specific fixes */
+@supports (-webkit-mask-image: none) {
+  .heart-shape {
+    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 4.248c-3.148-5.402-12-3.825-12 2.944 0 4.661 5.571 9.427 12 15.808 6.43-6.381 12-11.147 12-15.808 0-6.792-8.875-8.306-12-2.944z"/></svg>');
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    clip-path: none;
+  }
+}
+
+/* Heart container approach for proper image display */
+div.heart-shape {
+  overflow: hidden;
+  display: inline-block;
+}
+
+/* Heart image inside container */
+div.heart-shape img,
+div.heart-shape > * {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Direct heart on img element */
+img.heart-shape {
+  object-fit: cover;
+}
+
+/* ============================================
+   OVAL SHAPE - FIXED FOR IMAGES
+   ============================================ */
+
+/* Oval container approach - use this! */
+div.oval-shape {
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-block;
+}
+
+/* Oval image inside container */
+div.oval-shape img,
+div.oval-shape > * {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Direct oval on img element */
+img.oval-shape {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* ============================================
+   SIZE DEFINITIONS
+   ============================================ */
+
+/* Small preview thumbnails (48px) */
+.w-12.h-12.heart-shape {
+  width: 48px;
+  height: 48px;
+}
+
+.w-12.oval-shape {
+  width: 48px;
+  height: 60px;
+}
+
+/* Inline style override for oval thumbnail */
+[style*="height: 60px"].oval-shape {
+  height: 60px !important;
+}
+
+/* Medium preview in selector (128px) */
+.w-32.h-32.heart-shape {
+  width: 128px;
+  height: 128px;
+}
+
+.w-32.h-40.oval-shape {
+  width: 128px;
+  height: 160px;
+}
+
+/* Large - Memorial page (160px) */
+.w-40.h-40.heart-shape {
+  width: 160px;
+  height: 160px;
+}
+
+.w-40.h-50.oval-shape {
+  width: 160px;
+  height: 200px;
+}
+
+/* XL size */
+.w-48.h-60.oval-shape {
+  width: 192px;
+  height: 240px;
+}
+
+/* ============================================
+   MEMORIAL PAGE SPECIFIC
+   ============================================ */
+
+.memorial-profile-photo {
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Memorial oval container */
+.memorial-profile-photo.oval-shape {
+  width: 160px;
+  height: 200px;
+  border-radius: 50%;
+}
+
+/* Memorial heart shape */
+.memorial-profile-photo.heart-shape {
+  width: 160px !important;
+  height: 160px !important;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 768px) {
+  .w-40.h-50.oval-shape,
+  .memorial-profile-photo.oval-shape {
+    width: 120px;
+    height: 150px;
+  }
+  
+  .memorial-profile-photo.heart-shape {
+    width: 120px !important;
+    height: 120px !important;
+  }
+}
+
+/* ============================================
+   PREVIEW THUMBNAILS
+   ============================================ */
+
+.shape-preview-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+}
+
+.shape-preview-thumb.oval-shape {
+  width: 48px;
+  height: 60px; /* Maintains 4:5 ratio */
+}
+
+.shape-preview-thumb.heart-shape {
+  width: 48px;
+  height: 48px;
+}
+
+/* ============================================
+   ENSURE PROPER RENDERING
+   ============================================ */
+
+/* Force proper sizing for all oval shapes */
+.oval-shape {
+  border-radius: 50%;
+}
+
+/* Make sure images inside ovals fill properly */
+.oval-shape img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ============================================
+   HOVER EFFECTS
+   ============================================ */
+
+.shape-selector-button:hover .shape-preview-thumb {
+  transform: scale(1.05);
+  transition: transform 0.2s ease-in-out;
+}
+
+.shape-selected {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+}
+
+/* ============================================
+   PRINT SUPPORT
+   ============================================ */
+
+@media print {
+  .heart-shape,
+  .oval-shape,
+  .rounded-2xl,
+  .rounded-full {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ============================================
+   LOADING SKELETON
+   ============================================ */
+
+.shape-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}

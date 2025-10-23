@@ -7,6 +7,7 @@ import GalleryManager from '../components/GalleryManager';
 import TimelineManager from '../components/TimelineManager';
 import FamilyManager from '../components/FamilyManager';
 import FavoritesManager from '../components/FavoritesManager';
+import PhotoShapeSelector from '../components/PhotoShapeSelector';
 
 const EditMemorial = () => {
   const { id } = useParams();
@@ -28,6 +29,7 @@ const EditMemorial = () => {
 
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState(null);
+  const [photoShape, setPhotoShape] = useState('circle'); // NEW: Photo shape state
   
   const [gallery, setGallery] = useState({
     photos: [],
@@ -71,6 +73,7 @@ const EditMemorial = () => {
 
       if (memorial.profilePhoto?.url) {
         setProfilePhotoPreview(memorial.profilePhoto.url);
+        setPhotoShape(memorial.profilePhoto.shape || 'circle'); // Load saved shape
       }
 
       if (memorial.gallery) {
@@ -129,7 +132,7 @@ const EditMemorial = () => {
         ...formData,
         profilePhoto: profilePhotoPreview ? {
           url: profilePhotoPreview,
-          shape: 'circle'
+          shape: photoShape // Save selected shape
         } : null,
         gallery: gallery,
         timeline: timeline,
@@ -214,30 +217,44 @@ const EditMemorial = () => {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* Profile Photo */}
-            <div className="mb-6">
-              <label className="block text-gray-700 font-semibold mb-2">
-                Profile Photo
-              </label>
-              <div className="flex items-center space-x-4">
-                {profilePhotoPreview && (
-                  <img
-                    src={profilePhotoPreview}
-                    alt="Profile preview"
-                    className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
-                  />
-                )}
-                <label className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
-                  <Upload className="w-4 h-4 mr-2" />
-                  {profilePhotoPreview ? 'Change Photo' : 'Upload Photo'}
-                  <input
-                    type="file"
-                    onChange={handlePhotoChange}
-                    accept="image/*"
-                    className="hidden"
-                  />
+            {/* Profile Photo Section - ENHANCED */}
+            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
+              <h3 className="text-xl font-semibold mb-4">Profile Photo</h3>
+              
+              {/* Upload Button */}
+              <div className="mb-6">
+                <label className="block text-gray-700 font-semibold mb-2">
+                  Photo Upload
                 </label>
+                <div className="flex items-center space-x-4">
+                  {profilePhotoPreview && (
+                    <img
+                      src={profilePhotoPreview}
+                      alt="Profile preview"
+                      className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
+                    />
+                  )}
+                  <label className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
+                    <Upload className="w-4 h-4 mr-2" />
+                    {profilePhotoPreview ? 'Change Photo' : 'Upload Photo'}
+                    <input
+                      type="file"
+                      onChange={handlePhotoChange}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               </div>
+
+              {/* Photo Shape Selector - NEW! */}
+              {profilePhotoPreview && (
+                <PhotoShapeSelector
+                  currentShape={photoShape}
+                  photoUrl={profilePhotoPreview}
+                  onChange={setPhotoShape}
+                />
+              )}
             </div>
 
             {/* Full Name */}
@@ -334,7 +351,7 @@ const EditMemorial = () => {
               />
             </div>
 
-            {/* Favorites Section - NEW! */}
+            {/* Favorites Section */}
             <div className="mb-8 p-6 bg-gray-50 rounded-lg">
               <h3 className="text-xl font-semibold mb-4">Favorites & Interests</h3>
               <FavoritesManager 
