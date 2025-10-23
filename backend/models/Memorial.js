@@ -55,7 +55,21 @@ const memorialSchema = new mongoose.Schema({
     croppedData: mongoose.Schema.Types.Mixed
   },
   coverPhoto: {
-    url: String
+    url: String,
+    size: {
+      type: String,
+      enum: ['tall', 'medium', 'short'],
+      default: 'medium'
+    },
+    position: {
+      type: String,
+      enum: ['top', 'center', 'bottom'],
+      default: 'center'
+    },
+    showGradient: {
+      type: Boolean,
+      default: true
+    }
   },
   biography: {
     content: String,

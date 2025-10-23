@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, Heart, Share2 } from 'lucide-react';
 import api from '../utils/api';
-import FavoritesDisplay from '../components/FavoritesDisplay';
+import { Calendar, Heart, Share2, ArrowLeft } from 'lucide-react';
 
 const MemorialView = () => {
   const { url } = useParams();
@@ -18,14 +17,13 @@ const MemorialView = () => {
     try {
       const response = await api.get(`/memorials/${url}`);
       setMemorial(response.data.memorial);
-      setLoading(false);
     } catch (err) {
       setError(err.response?.data?.error || 'Memorial not found');
+    } finally {
       setLoading(false);
     }
   };
 
-  // Helper function to get shape CSS class
   const getPhotoShapeClass = (shape) => {
     const shapeMap = {
       'circle': 'rounded-full',
@@ -45,14 +43,14 @@ const MemorialView = () => {
     );
   }
 
-  if (error || !memorial) {
+  if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Memorial Not Found</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Memorial Not Found</h1>
           <p className="text-gray-600 mb-6">{error}</p>
           <Link to="/" className="text-blue-600 hover:text-blue-700">
-            Return to Home
+            Return to Homepage
           </Link>
         </div>
       </div>
@@ -61,7 +59,27 @@ const MemorialView = () => {
 
   const birthYear = memorial.birthDate ? new Date(memorial.birthDate).getFullYear() : null;
   const deathYear = memorial.deathDate ? new Date(memorial.deathDate).getFullYear() : null;
-  const photoShape = memorial.profilePhoto?.shape || 'circle'; // Get saved shape
+  const photoShape = memorial.profilePhoto?.shape || 'circle';
+  const coverPhoto = memorial.coverPhoto;
+
+  // Helper functions for cover photo
+  const getCoverHeight = () => {
+    const heights = {
+      'tall': 'h-[400px]',
+      'medium': 'h-[300px]',
+      'short': 'h-[200px]'
+    };
+    return heights[coverPhoto?.size] || 'h-48';
+  };
+
+  const getCoverPosition = () => {
+    const positions = {
+      'top': 'object-top',
+      'center': 'object-center',
+      'bottom': 'object-bottom'
+    };
+    return positions[coverPhoto?.position] || 'object-center';
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -79,14 +97,28 @@ const MemorialView = () => {
       <main className="container mx-auto px-4 py-12 max-w-4xl">
         {/* Profile Section */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-800 h-48"></div>
+          {/* Cover Photo or Default Gradient */}
+          {coverPhoto?.url ? (
+            <div className={`relative ${getCoverHeight()}`}>
+              <img
+                src={coverPhoto.url}
+                alt="Cover"
+                className={`w-full h-full object-cover ${getCoverPosition()}`}
+              />
+              {coverPhoto.showGradient !== false && (
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black opacity-60"></div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-gradient-to-r from-blue-600 to-blue-800 h-48"></div>
+          )}
           
           <div className="relative px-8 pb-8">
             {/* Profile Photo with Selected Shape */}
             {memorial.profilePhoto?.url && (
               <div className="relative -mt-20 mb-6 flex justify-center">
                 {photoShape === 'oval' ? (
-                  <div className={`w-40 h-50 border-4 border-white shadow-lg overflow-hidden ${getPhotoShapeClass(photoShape)}`}>
+                  <div className={`w-40 border-4 border-white shadow-lg overflow-hidden ${getPhotoShapeClass(photoShape)}`} style={{ height: '200px' }}>
                     <img
                       src={memorial.profilePhoto.url}
                       alt={memorial.fullName}
@@ -120,8 +152,7 @@ const MemorialView = () => {
                 <div className="flex items-center justify-center text-gray-600 text-lg">
                   <Calendar className="w-5 h-5 mr-2" />
                   <span>
-                    {birthYear && deathYear ? 
-                     `${birthYear} - ${deathYear}` : 
+                    {birthYear && deathYear ? `${birthYear} - ${deathYear}` : 
                      birthYear ? `Born ${birthYear}` : 
                      deathYear ? `Passed ${deathYear}` : ''}
                   </span>
@@ -156,6 +187,27 @@ const MemorialView = () => {
             </div>
           </div>
         </div>
+
+        {/* Favorites Section */}
+        {memorial.favorites?.length > 0 && memorial.showFavorites && (
+          <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Favorites & Interests</h2>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+              {memorial.favorites.map((favorite, index) => (
+                <div key={index} className="border rounded-lg p-4 hover:shadow-md transition">
+                  <div className="flex items-start space-x-3">
+                    <div className="text-2xl">{favorite.icon}</div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 mb-1">{favorite.category}</h3>
+                      <p className="text-gray-600 text-sm whitespace-pre-wrap">{favorite.content}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Photo Gallery */}
         {memorial.gallery?.photos?.length > 0 && memorial.gallery.showGallery && (
@@ -246,12 +298,6 @@ const MemorialView = () => {
             </div>
           </div>
         )}
-
-        {/* Favorites Section */}
-        <FavoritesDisplay 
-          favorites={memorial.favorites}
-          showFavorites={memorial.showFavorites}
-        />
 
         {/* Family Section */}
         {memorial.familyMembers?.length > 0 && memorial.showFamily && (

@@ -60,7 +60,7 @@ router.get('/my-memorials', protect, async (req, res) => {
 });
 
 // @route   GET /api/memorials/edit/:id
-// @desc    Get memorial for editing (includes all fields)
+// @desc    Get memorial for editing (includes all data)
 // @access  Private
 router.get('/edit/:id', protect, async (req, res) => {
   try {
@@ -70,7 +70,7 @@ router.get('/edit/:id', protect, async (req, res) => {
       return res.status(404).json({ error: 'Memorial not found' });
     }
 
-    // Check if user owns memorial or can edit
+    // Check if user can edit
     if (!memorial.canEdit(req.user._id)) {
       return res.status(403).json({ error: 'Not authorized to edit this memorial' });
     }
@@ -83,7 +83,7 @@ router.get('/edit/:id', protect, async (req, res) => {
 });
 
 // @route   GET /api/memorials/:url
-// @desc    Get memorial by URL (public view)
+// @desc    Get memorial by URL
 // @access  Public
 router.get('/:url', async (req, res) => {
   try {
@@ -127,33 +127,28 @@ router.put('/:id', protect, async (req, res) => {
       return res.status(403).json({ error: 'Not authorized to edit this memorial' });
     }
 
-    // Update basic fields
+    // Update fields - UPDATED TO INCLUDE ALL NEW FIELDS
     const allowedUpdates = [
       'fullName', 
       'birthDate', 
       'deathDate', 
       'biography', 
       'profilePhoto', 
+      'coverPhoto',        // ADDED FOR COVER PHOTO FEATURE
       'showDates', 
-      'status',
-      'gallery',
+      'status', 
+      'gallery', 
       'timeline',
       'familyMembers',
       'showFamily',
       'favorites',
       'showFavorites'
     ];
-
+    
     allowedUpdates.forEach(field => {
       if (req.body[field] !== undefined) {
         if (field === 'biography') {
           memorial.biography.content = req.body[field];
-        } else if (field === 'gallery') {
-          memorial.gallery = req.body[field];
-        } else if (field === 'timeline') {
-          memorial.timeline = req.body[field];
-        } else if (field === 'favorites') {
-          memorial.favorites = req.body[field];
         } else {
           memorial[field] = req.body[field];
         }

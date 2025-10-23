@@ -8,6 +8,7 @@ import TimelineManager from '../components/TimelineManager';
 import FamilyManager from '../components/FamilyManager';
 import FavoritesManager from '../components/FavoritesManager';
 import PhotoShapeSelector from '../components/PhotoShapeSelector';
+import CoverPhotoManager from '../components/CoverPhotoManager';
 
 const EditMemorial = () => {
   const { id } = useParams();
@@ -29,7 +30,8 @@ const EditMemorial = () => {
 
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState(null);
-  const [photoShape, setPhotoShape] = useState('circle'); // NEW: Photo shape state
+  const [photoShape, setPhotoShape] = useState('circle');
+  const [coverPhoto, setCoverPhoto] = useState(null); // NEW: Cover photo state
   
   const [gallery, setGallery] = useState({
     photos: [],
@@ -73,7 +75,11 @@ const EditMemorial = () => {
 
       if (memorial.profilePhoto?.url) {
         setProfilePhotoPreview(memorial.profilePhoto.url);
-        setPhotoShape(memorial.profilePhoto.shape || 'circle'); // Load saved shape
+        setPhotoShape(memorial.profilePhoto.shape || 'circle');
+      }
+
+      if (memorial.coverPhoto) {
+        setCoverPhoto(memorial.coverPhoto);
       }
 
       if (memorial.gallery) {
@@ -132,8 +138,9 @@ const EditMemorial = () => {
         ...formData,
         profilePhoto: profilePhotoPreview ? {
           url: profilePhotoPreview,
-          shape: photoShape // Save selected shape
+          shape: photoShape
         } : null,
+        coverPhoto: coverPhoto,
         gallery: gallery,
         timeline: timeline,
         familyMembers: family.familyMembers,
@@ -247,7 +254,7 @@ const EditMemorial = () => {
                 </div>
               </div>
 
-              {/* Photo Shape Selector - NEW! */}
+              {/* Photo Shape Selector */}
               {profilePhotoPreview && (
                 <PhotoShapeSelector
                   currentShape={photoShape}
@@ -255,6 +262,15 @@ const EditMemorial = () => {
                   onChange={setPhotoShape}
                 />
               )}
+            </div>
+
+            {/* Cover Photo Section - NEW! */}
+            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
+              <h3 className="text-xl font-semibold mb-4">Cover Photo / Banner</h3>
+              <CoverPhotoManager 
+                coverPhoto={coverPhoto}
+                onChange={setCoverPhoto}
+              />
             </div>
 
             {/* Full Name */}
