@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
-import { ArrowLeft, Upload, Calendar, Trash2 } from 'lucide-react';
+import { ArrowLeft, Upload, Calendar, Trash2, Crop } from 'lucide-react';
 import GalleryManager from '../components/GalleryManager';
 import TimelineManager from '../components/TimelineManager';
 import FamilyManager from '../components/FamilyManager';
 import FavoritesManager from '../components/FavoritesManager';
 import PhotoShapeSelector from '../components/PhotoShapeSelector';
 import CoverPhotoManager from '../components/CoverPhotoManager';
+import PhotoCropper from '../components/PhotoCropper';
+import ThemeCustomizer from '../components/ThemeCustomizer';
 
 const EditMemorial = () => {
   const { id } = useParams();
@@ -31,7 +33,10 @@ const EditMemorial = () => {
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState(null);
   const [photoShape, setPhotoShape] = useState('circle');
-  const [coverPhoto, setCoverPhoto] = useState(null); // NEW: Cover photo state
+  const [coverPhoto, setCoverPhoto] = useState(null);
+  const [showCropper, setShowCropper] = useState(false);
+  const [cropData, setCropData] = useState(null);
+  const [tempPhotoUrl, setTempPhotoUrl] = useState(null);
   
   const [gallery, setGallery] = useState({
     photos: [],
@@ -42,7 +47,8 @@ const EditMemorial = () => {
 
   const [timeline, setTimeline] = useState({
     events: [],
-    showTimeline: true
+    showTimeline: true,
+    orientation: 'vertical'
   });
 
   const [family, setFamily] = useState({
@@ -53,6 +59,13 @@ const EditMemorial = () => {
   const [favorites, setFavorites] = useState({
     favorites: [],
     showFavorites: true
+  });
+
+  const [theme, setTheme] = useState({
+    accentColor: '#2563EB',
+    headingFont: 'Inter',
+    bodyFont: 'Inter',
+    backgroundStyle: 'gradient'
   });
 
   useEffect(() => {
@@ -76,6 +89,7 @@ const EditMemorial = () => {
       if (memorial.profilePhoto?.url) {
         setProfilePhotoPreview(memorial.profilePhoto.url);
         setPhotoShape(memorial.profilePhoto.shape || 'circle');
+        setCropData(memorial.profilePhoto.croppedData || null);
       }
 
       if (memorial.coverPhoto) {
@@ -100,6 +114,15 @@ const EditMemorial = () => {
         showFavorites: memorial.showFavorites !== false
       });
 
+      if (memorial.theme) {
+        setTheme({
+          accentColor: memorial.theme.accentColor || '#2563EB',
+          headingFont: memorial.theme.headingFont || 'Inter',
+          bodyFont: memorial.theme.bodyFont || 'Inter',
+          backgroundStyle: memorial.theme.backgroundStyle || 'gradient'
+        });
+      }
+
       setLoading(false);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load memorial');
@@ -121,10 +144,22 @@ const EditMemorial = () => {
       setProfilePhoto(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfilePhotoPreview(reader.result);
+        setTempPhotoUrl(reader.result);
+        setShowCropper(true);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleCropSave = (cropInfo) => {
+    setCropData(cropInfo);
+    setProfilePhotoPreview(tempPhotoUrl);
+    setShowCropper(false);
+  };
+
+  const handleCropCancel = () => {
+    setShowCropper(false);
+    setTempPhotoUrl(null);
   };
 
   const handleSubmit = async (e) => {
@@ -138,7 +173,8 @@ const EditMemorial = () => {
         ...formData,
         profilePhoto: profilePhotoPreview ? {
           url: profilePhotoPreview,
-          shape: photoShape
+          shape: photoShape,
+          croppedData: cropData
         } : null,
         coverPhoto: coverPhoto,
         gallery: gallery,
@@ -146,7 +182,8 @@ const EditMemorial = () => {
         familyMembers: family.familyMembers,
         showFamily: family.showFamily,
         favorites: favorites.favorites,
-        showFavorites: favorites.showFavorites
+        showFavorites: favorites.showFavorites,
+        theme: theme
       };
 
       console.log('Sending update data:', updateData);
@@ -193,6 +230,16 @@ const EditMemorial = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Photo Cropper Modal */}
+      {showCropper && tempPhotoUrl && (
+        <PhotoCropper
+          imageUrl={tempPhotoUrl}
+          onSave={handleCropSave}
+          onCancel={handleCropCancel}
+          shape={photoShape}
+        />
+      )}
+
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4">
@@ -224,7 +271,7 @@ const EditMemorial = () => {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* Profile Photo Section - ENHANCED */}
+            {/* Profile Photo Section - ENHANCED WITH CROPPER */}
             <div className="mb-8 p-6 bg-gray-50 rounded-lg">
               <h3 className="text-xl font-semibold mb-4">Profile Photo</h3>
               
@@ -241,16 +288,31 @@ const EditMemorial = () => {
                       className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
                     />
                   )}
-                  <label className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
-                    <Upload className="w-4 h-4 mr-2" />
-                    {profilePhotoPreview ? 'Change Photo' : 'Upload Photo'}
-                    <input
-                      type="file"
-                      onChange={handlePhotoChange}
-                      accept="image/*"
-                      className="hidden"
-                    />
-                  </label>
+                  <div className="space-y-2">
+                    <label className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center w-fit">
+                      <Upload className="w-4 h-4 mr-2" />
+                      {profilePhotoPreview ? 'Change Photo' : 'Upload Photo'}
+                      <input
+                        type="file"
+                        onChange={handlePhotoChange}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                    </label>
+                    {profilePhotoPreview && cropData && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTempPhotoUrl(profilePhotoPreview);
+                          setShowCropper(true);
+                        }}
+                        className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700"
+                      >
+                        <Crop className="w-4 h-4 mr-2" />
+                        Re-crop Photo
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -264,169 +326,174 @@ const EditMemorial = () => {
               )}
             </div>
 
-            {/* Cover Photo Section - NEW! */}
-            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">Cover Photo / Banner</h3>
+            {/* Cover Photo Section */}
+            <div className="mb-8">
               <CoverPhotoManager 
-                coverPhoto={coverPhoto}
-                onChange={setCoverPhoto}
+                coverPhoto={coverPhoto} 
+                onChange={setCoverPhoto} 
               />
             </div>
 
-            {/* Full Name */}
-            <div className="mb-6">
-              <label className="block text-gray-700 font-semibold mb-2">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Birth & Death Dates */}
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <div>
+            {/* Basic Info */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold mb-4">Basic Information</h3>
+              
+              {/* Full Name */}
+              <div className="mb-6">
                 <label className="block text-gray-700 font-semibold mb-2">
-                  Birth Date
+                  Full Name *
                 </label>
                 <input
-                  type="date"
-                  name="birthDate"
-                  value={formData.birthDate}
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="John Doe"
+                  required
                 />
               </div>
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2">
-                  Death Date
-                </label>
-                <input
-                  type="date"
-                  name="deathDate"
-                  value={formData.deathDate}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
 
-            {/* Show Dates Checkbox */}
-            <div className="mb-6">
-              <label className="flex items-center">
+              {/* Dates */}
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label className="block text-gray-700 font-semibold mb-2">
+                    Birth Date
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="date"
+                      name="birthDate"
+                      value={formData.birthDate}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-semibold mb-2">
+                    Death Date
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="date"
+                      name="deathDate"
+                      value={formData.deathDate}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Show Dates Toggle */}
+              <div className="flex items-center mb-6">
                 <input
                   type="checkbox"
+                  id="showDates"
                   name="showDates"
                   checked={formData.showDates}
                   onChange={handleChange}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <span className="ml-2 text-gray-700">Display dates on memorial page</span>
-              </label>
+                <label htmlFor="showDates" className="ml-2 text-gray-700">
+                  Display dates publicly
+                </label>
+              </div>
+
+              {/* Biography */}
+              <div className="mb-6">
+                <label className="block text-gray-700 font-semibold mb-2">
+                  Biography / Life Story
+                </label>
+                <textarea
+                  name="biography"
+                  value={formData.biography}
+                  onChange={handleChange}
+                  rows="8"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Share the story of their life, their passions, achievements, and the impact they had on others..."
+                ></textarea>
+              </div>
+
+              {/* Status */}
+              <div className="mb-6">
+                <label className="block text-gray-700 font-semibold mb-2">
+                  Memorial Status
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="unpublished">Unpublished (Draft)</option>
+                  <option value="public">Public</option>
+                  <option value="private">Private (Password Protected)</option>
+                </select>
+              </div>
             </div>
 
-            {/* Biography */}
-            <div className="mb-6">
-              <label className="block text-gray-700 font-semibold mb-2">
-                Biography / Life Story
-              </label>
-              <textarea
-                name="biography"
-                value={formData.biography}
-                onChange={handleChange}
-                rows="8"
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Write about their life..."
-              />
-            </div>
-
-            {/* Gallery Section */}
+            {/* Theme Customization - NEW */}
             <div className="mb-8 p-6 bg-gray-50 rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">Photo Gallery</h3>
+              <h3 className="text-xl font-semibold mb-4">Theme & Appearance</h3>
+              <ThemeCustomizer theme={theme} onChange={setTheme} />
+            </div>
+
+            {/* Gallery */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold mb-4">Photo & Video Gallery</h3>
               <GalleryManager gallery={gallery} onChange={setGallery} />
             </div>
 
-            {/* Timeline Section */}
-            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">Timeline & Life Events</h3>
+            {/* Timeline */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold mb-4">Life Timeline</h3>
               <TimelineManager timeline={timeline} onChange={setTimeline} />
             </div>
 
-            {/* Family Section */}
-            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">Family & Loved Ones</h3>
-              <FamilyManager 
-                familyMembers={family.familyMembers}
-                showFamily={family.showFamily}
-                onChange={setFamily}
-              />
-            </div>
-
-            {/* Favorites Section */}
-            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">Favorites & Interests</h3>
-              <FavoritesManager 
-                favorites={favorites.favorites}
-                showFavorites={favorites.showFavorites}
-                onChange={setFavorites}
-              />
-            </div>
-
-            {/* Privacy Status */}
+            {/* Family */}
             <div className="mb-8">
-              <label className="block text-gray-700 font-semibold mb-2">
-                Privacy Status
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="unpublished">Unpublished (Only you can see it)</option>
-                <option value="public">Public (Anyone with the link can view)</option>
-                <option value="private">Private (Password required to view)</option>
-              </select>
+              <h3 className="text-xl font-semibold mb-4">Family Members</h3>
+              <FamilyManager family={family} onChange={setFamily} />
             </div>
 
-            {/* Submit Buttons */}
-            <div className="flex space-x-4">
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-              >
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
+            {/* Favorites */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold mb-4">Favorites & Interests</h3>
+              <FavoritesManager favorites={favorites} onChange={setFavorites} />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-between items-center pt-6 border-t">
               <button
                 type="button"
-                onClick={() => navigate('/dashboard')}
-                className="px-8 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
+                onClick={handleDelete}
+                className="flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >
-                Cancel
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Memorial
               </button>
+              
+              <div className="flex space-x-4">
+                <Link
+                  to="/dashboard"
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
             </div>
           </form>
-
-          {/* Delete Memorial */}
-          <div className="mt-12 pt-8 border-t border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Danger Zone</h3>
-            <p className="text-gray-600 mb-4">
-              Once you delete a memorial, there is no going back. Please be certain.
-            </p>
-            <button
-              onClick={handleDelete}
-              className="flex items-center px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete Memorial
-            </button>
-          </div>
         </div>
       </main>
     </div>
