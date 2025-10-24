@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Video } from 'lucide-react';
+import VideoEmbedManager from './VideoEmbedManager';
 
 const GalleryManager = ({ gallery, onChange }) => {
   const [uploading, setUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState('photos');
 
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -109,7 +111,15 @@ const GalleryManager = ({ gallery, onChange }) => {
     });
   };
 
+  const handleVideosChange = (updatedVideos) => {
+    onChange({
+      ...gallery,
+      videos: updatedVideos
+    });
+  };
+
   const photos = gallery.photos || [];
+  const videos = gallery.videos || [];
   const displayStyle = gallery.displayStyle || 'grid';
 
   return (
@@ -145,73 +155,120 @@ const GalleryManager = ({ gallery, onChange }) => {
         </div>
       </div>
 
-      {/* Upload Button */}
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2">
-          Gallery Photos ({photos.length} photos)
-        </label>
-        <input
-          type="file"
-          id="galleryUpload"
-          accept="image/*"
-          multiple
-          onChange={handlePhotoUpload}
-          className="hidden"
-          disabled={uploading}
-        />
-        <label
-          htmlFor="galleryUpload"
-          className={`flex items-center justify-center w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition ${
-            uploading ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-        >
-          <Upload className="w-5 h-5 mr-2 text-gray-600" />
-          <span className="text-gray-600">
-            {uploading ? 'Uploading...' : 'Upload Photos'}
-          </span>
-        </label>
-        <p className="text-sm text-gray-500 mt-2">
-          You can upload multiple photos at once. Images will be compressed to WebP format.
-        </p>
+      {/* Tabs for Photos and Videos */}
+      <div className="border-b border-gray-300">
+        <div className="flex space-x-4">
+          <button
+            type="button"
+            onClick={() => setActiveTab('photos')}
+            className={`pb-2 px-1 border-b-2 font-medium transition ${
+              activeTab === 'photos'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <div className="flex items-center">
+              <ImageIcon className="w-4 h-4 mr-1.5" />
+              Photos ({photos.length})
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('videos')}
+            className={`pb-2 px-1 border-b-2 font-medium transition ${
+              activeTab === 'videos'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <div className="flex items-center">
+              <Video className="w-4 h-4 mr-1.5" />
+              Videos ({videos.length})
+            </div>
+          </button>
+        </div>
       </div>
 
-      {/* Photo Grid */}
-      {photos.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {photos.map((photo, index) => (
-            <div key={index} className="relative group">
-              <img
-                src={photo.url}
-                alt={photo.caption || `Gallery photo ${index + 1}`}
-                className="w-full h-40 object-cover rounded-lg"
-              />
-              
-              {/* Remove Button */}
-              <button
-                type="button"
-                onClick={() => handleRemovePhoto(index)}
-                className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-red-700"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      {/* Photos Tab */}
+      {activeTab === 'photos' && (
+        <div className="space-y-4">
+          {/* Upload Button */}
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Gallery Photos ({photos.length} photos)
+            </label>
+            <input
+              type="file"
+              id="galleryUpload"
+              accept="image/*"
+              multiple
+              onChange={handlePhotoUpload}
+              className="hidden"
+              disabled={uploading}
+            />
+            <label
+              htmlFor="galleryUpload"
+              className={`flex items-center justify-center w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition ${
+                uploading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              <Upload className="w-5 h-5 mr-2 text-gray-600" />
+              <span className="text-gray-600">
+                {uploading ? 'Uploading...' : 'Upload Photos'}
+              </span>
+            </label>
+            <p className="text-sm text-gray-500 mt-2">
+              You can upload multiple photos at once. Images will be compressed to WebP format.
+            </p>
+          </div>
 
-              {/* Caption Input */}
-              <input
-                type="text"
-                value={photo.caption || ''}
-                onChange={(e) => handleCaptionChange(index, e.target.value)}
-                placeholder="Add caption..."
-                className="w-full mt-2 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
+          {/* Photo Grid */}
+          {photos.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {photos.map((photo, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={photo.url}
+                    alt={photo.caption || `Gallery photo ${index + 1}`}
+                    className="w-full h-40 object-cover rounded-lg"
+                  />
+                  
+                  {/* Remove Button */}
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePhoto(index)}
+                    className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-red-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+
+                  {/* Caption Input */}
+                  <input
+                    type="text"
+                    value={photo.caption || ''}
+                    onChange={(e) => handleCaptionChange(index, e.target.value)}
+                    placeholder="Add caption..."
+                    className="w-full mt-2 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">No photos yet</p>
+              <p className="text-sm text-gray-500">Upload photos to start building your gallery</p>
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">No photos yet</p>
-          <p className="text-sm text-gray-500">Upload photos to start building your gallery</p>
-        </div>
+      )}
+
+      {/* Videos Tab */}
+      {activeTab === 'videos' && (
+        <VideoEmbedManager 
+          videos={videos} 
+          onChange={handleVideosChange} 
+        />
       )}
     </div>
   );

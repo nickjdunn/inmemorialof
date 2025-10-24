@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../utils/api';
-import { Calendar, Heart, Share2, ArrowLeft } from 'lucide-react';
+import { Calendar, Heart, Share2, ArrowLeft, Play } from 'lucide-react';
+import VideoModal from '../components/VideoModal';
 
 const MemorialView = () => {
   const { url } = useParams();
   const [memorial, setMemorial] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedVideo, setSelectedVideo] = useState(null);
 
   useEffect(() => {
     fetchMemorial();
@@ -209,15 +211,16 @@ const MemorialView = () => {
           </div>
         )}
 
-        {/* Photo Gallery */}
-        {memorial.gallery?.photos?.length > 0 && memorial.gallery.showGallery && (
+        {/* Photo & Video Gallery */}
+        {((memorial.gallery?.photos?.length > 0) || (memorial.gallery?.videos?.length > 0)) && memorial.gallery.showGallery && (
           <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Photo Gallery</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Gallery</h2>
             
             {memorial.gallery.displayStyle === 'grid' ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {memorial.gallery.photos.map((photo, index) => (
-                  <div key={index} className="group cursor-pointer">
+                {/* Photos */}
+                {memorial.gallery.photos?.map((photo, index) => (
+                  <div key={`photo-${index}`} className="group cursor-pointer">
                     <img
                       src={photo.url}
                       alt={photo.caption || `Gallery photo ${index + 1}`}
@@ -233,20 +236,83 @@ const MemorialView = () => {
                     )}
                   </div>
                 ))}
+                
+                {/* Videos */}
+                {memorial.gallery.videos?.map((video, index) => (
+                  <div 
+                    key={`video-${index}`} 
+                    className="group cursor-pointer relative"
+                    onClick={() => setSelectedVideo(video)}
+                  >
+                    <img
+                      src={video.thumbnail}
+                      alt={video.caption || `Video ${index + 1}`}
+                      className="w-full h-48 object-cover rounded-lg shadow hover:shadow-xl transition"
+                    />
+                    {/* Play Button Overlay */}
+                    <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition flex items-center justify-center rounded-lg">
+                      <div className="bg-white bg-opacity-90 rounded-full p-4 group-hover:scale-110 transition">
+                        <Play className="w-8 h-8 text-blue-600 fill-current" />
+                      </div>
+                    </div>
+                    {/* Platform Badge */}
+                    <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                      {video.platform === 'youtube' ? 'YouTube' : 'Vimeo'}
+                    </div>
+                    {video.caption && (
+                      <p className="text-sm text-gray-600 mt-2 text-center">
+                        {video.caption}
+                      </p>
+                    )}
+                  </div>
+                ))}
               </div>
             ) : (
+              // Carousel style
               <div className="overflow-x-auto">
                 <div className="flex space-x-4 pb-4">
-                  {memorial.gallery.photos.map((photo, index) => (
-                    <div key={index} className="flex-shrink-0 w-80">
+                  {/* Photos in carousel */}
+                  {memorial.gallery.photos?.map((photo, index) => (
+                    <div key={`photo-${index}`} className="flex-shrink-0 w-80">
                       <img
                         src={photo.url}
                         alt={photo.caption || `Gallery photo ${index + 1}`}
-                        className="w-full h-64 object-cover rounded-lg shadow-lg"
+                        className="w-full h-64 object-cover rounded-lg shadow-lg cursor-pointer"
+                        onClick={() => window.open(photo.url, '_blank')}
                       />
                       {photo.caption && (
                         <p className="text-sm text-gray-600 mt-2 text-center">
                           {photo.caption}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* Videos in carousel */}
+                  {memorial.gallery.videos?.map((video, index) => (
+                    <div 
+                      key={`video-${index}`} 
+                      className="flex-shrink-0 w-80 relative cursor-pointer"
+                      onClick={() => setSelectedVideo(video)}
+                    >
+                      <img
+                        src={video.thumbnail}
+                        alt={video.caption || `Video ${index + 1}`}
+                        className="w-full h-64 object-cover rounded-lg shadow-lg"
+                      />
+                      {/* Play Button Overlay */}
+                      <div className="absolute inset-0 bg-black bg-opacity-20 hover:bg-opacity-30 transition flex items-center justify-center rounded-lg">
+                        <div className="bg-white bg-opacity-90 rounded-full p-4 hover:scale-110 transition">
+                          <Play className="w-8 h-8 text-blue-600 fill-current" />
+                        </div>
+                      </div>
+                      {/* Platform Badge */}
+                      <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                        {video.platform === 'youtube' ? 'YouTube' : 'Vimeo'}
+                      </div>
+                      {video.caption && (
+                        <p className="text-sm text-gray-600 mt-2 text-center">
+                          {video.caption}
                         </p>
                       )}
                     </div>
@@ -345,6 +411,14 @@ const MemorialView = () => {
           </p>
         </div>
       </footer>
+
+      {/* Video Modal */}
+      {selectedVideo && (
+        <VideoModal 
+          video={selectedVideo} 
+          onClose={() => setSelectedVideo(null)} 
+        />
+      )}
     </div>
   );
 };
